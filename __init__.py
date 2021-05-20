@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    CONF_URL,
 )
 from homeassistant.core import HomeAssistant
 
@@ -27,6 +28,8 @@ from .const import (
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
+from .config_flow import _get_owm_config
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -38,8 +41,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     forecast_mode = _get_config_value(config_entry, CONF_MODE)
     language = _get_config_value(config_entry, CONF_LANGUAGE)
+    url = config_entry.data[CONF_URL]
 
-    config_dict = _get_owm_config(language)
+    config_dict = _get_owm_config(language, url)
+
+    config_dict['subscription_type'] = 'free'
 
     owm = OWM(api_key, config_dict).weather_manager()
     weather_coordinator = WeatherUpdateCoordinator(
@@ -110,10 +116,3 @@ def _get_config_value(config_entry, key):
     if config_entry.options:
         return config_entry.options[key]
     return config_entry.data[key]
-
-
-def _get_owm_config(language):
-    """Get OpenWeatherMap configuration and add language to it."""
-    config_dict = get_default_config()
-    config_dict["language"] = language
-    return config_dict

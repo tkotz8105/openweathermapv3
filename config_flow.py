@@ -1,5 +1,6 @@
 """Config flow for OpenWeatherMap."""
 from pyowm import OWM
+from pyowm.utils.config import get_default_config
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 import voluptuous as vol
 
@@ -10,6 +11,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    CONF_URL,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -20,11 +22,16 @@ from .const import (
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
+    DEFAULT_URL,
+    DEFAULT_USE_SSL,
+    DEFAULT_VERIFY_SSL_CERTS,
+    DEFAULT_USE_PROXY,
+    DEFAULT_HAS_SUBDOMAINS,
+    DEFAULT_HAS_PATH,
     DOMAIN,
     FORECAST_MODES,
     LANGUAGES,
 )
-
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
@@ -44,13 +51,14 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             latitude = user_input[CONF_LATITUDE]
             longitude = user_input[CONF_LONGITUDE]
+            url = user_input[CONF_URL]
 
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
             try:
                 api_online = await _is_owm_api_online(
-                    self.hass, user_input[CONF_API_KEY], latitude, longitude
+                    self.hass, user_input[CONF_API_KEY], latitude, longitude, url
                 )
                 if not api_online:
                     errors["base"] = "invalid_api_key"
@@ -80,6 +88,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     LANGUAGES
                 ),
+                vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
             }
         )
 
@@ -118,10 +127,30 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
                         CONF_LANGUAGE, DEFAULT_LANGUAGE
                     ),
                 ): vol.In(LANGUAGES),
+                vol.Optional(
+                    CONF_URL,
+                    default=self.config_entry.options.get(
+                        CONF_URL, DEFAULT_URL
+                    ),
+                ): cv.string, 
             }
         )
 
+async def _is_owm_api_online(hass, api_key, lat, lon, url):
 
-async def _is_owm_api_online(hass, api_key, lat, lon):
-    owm = OWM(api_key).weather_manager()
+    config_dict = _get_owm_config(CONF_LANGUAGE, url)
+    owm = OWM(api_key, config_dict).weather_manager()
+
     return await hass.async_add_executor_job(owm.one_call, lat, lon)
+
+def _get_owm_config(language, url):
+    """Get OpenWeatherMap configuration and add language to it."""
+    config_dict = get_default_config()
+    config_dict["language"] = language
+    config_dict["url"] = url
+    config_dict['connection']['has_subdomains'] = DEFAULT_HAS_SUBDOMAINS
+    config_dict['connection']['has_path'] = DEFAULT_HAS_PATH
+    config_dict['connection']['use_ssl'] = DEFAULT_USE_SSL
+    config_dict['connection']['verify_ssl_certs'] = DEFAULT_VERIFY_SSL_CERTS
+    config_dict['connection']['use_proxy'] = DEFAULT_USE_PROXY
+    return config_dict    

@@ -38,8 +38,8 @@ from homeassistant.const import (
     UV_INDEX,
 )
 
-DOMAIN = "openweathermap"
-DEFAULT_NAME = "OpenWeatherMap"
+DOMAIN = "openweathermapv3"
+DEFAULT_NAME = "OpenWeatherMapv3"
 DEFAULT_LANGUAGE = "en"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 MANUFACTURER = "OpenWeather"
@@ -83,6 +83,12 @@ FORECAST_MODES = [
     FORECAST_MODE_ONECALL_DAILY,
 ]
 DEFAULT_FORECAST_MODE = FORECAST_MODE_ONECALL_DAILY
+DEFAULT_URL = "192.168.1.202:8081/darksky/openweather.json"
+DEFAULT_USE_SSL = False
+DEFAULT_VERIFY_SSL_CERTS = False
+DEFAULT_USE_PROXY = False
+DEFAULT_HAS_SUBDOMAINS = False
+DEFAULT_HAS_PATH = False
 
 MONITORED_CONDITIONS = [
     ATTR_API_WEATHER,

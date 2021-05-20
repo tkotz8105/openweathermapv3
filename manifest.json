@@ -1,9 +1,11 @@
 {
-  "domain": "openweathermap",
-  "name": "OpenWeatherMap",
+  "domain": "openweathermapv3",
+  "name": "OpenWeatherMapv3",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openweathermap",
-  "requirements": ["pyowm==3.2.0"],
+  "requirements": ["git+https://github.com/tkotz8105/pyowm.git#package==3.2.0"],
   "codeowners": ["@fabaff", "@freekode", "@nzapponi"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "version": "0.0.1"
 }
+
